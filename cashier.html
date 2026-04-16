@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بن الكويبي - الكاشير</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brown: #3E1F00; --gold: #C9A84C; --cream: #FFF8F0;
+  --success: #22c55e; --danger: #ef4444;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Tajawal',sans-serif; background:#f0e8da; height:100vh; overflow:hidden; }
+
+/* LAYOUT */
+.pos-layout { display:grid; grid-template-columns:1fr 380px; height:100vh; }
+
+/* LEFT - PRODUCTS */
+.products-panel { display:flex; flex-direction:column; overflow:hidden; }
+.pos-header {
+  background:var(--brown); padding:14px 20px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.pos-header h1 { color:var(--gold); font-size:18px; font-weight:800; }
+.pos-header .user { color:rgba(255,255,255,0.6); font-size:13px; }
+.pos-toolbar {
+  background:white; padding:12px 16px;
+  display:flex; gap:10px; align-items:center;
+  border-bottom:2px solid #f0e8da;
+}
+.search-input {
+  flex:1; border:2px solid #e8d5b7; border-radius:10px;
+  padding:10px 14px; font-family:'Tajawal',sans-serif; font-size:14px;
+  outline:none; transition:border-color 0.2s;
+}
+.search-input:focus { border-color:var(--gold); }
+.cat-pills { display:flex; gap:6px; overflow-x:auto; padding:10px 16px; background:white; scrollbar-width:none; }
+.cat-pills::-webkit-scrollbar { display:none; }
+.cat-pill {
+  background:#f5f0ea; border:none; border-radius:50px;
+  padding:6px 16px; font-family:'Tajawal',sans-serif;
+  font-size:13px; font-weight:600; color:#8B6A40; cursor:pointer;
+  white-space:nowrap; transition:all 0.2s;
+}
+.cat-pill.active { background:var(--brown); color:white; }
+.products-grid {
+  flex:1; overflow-y:auto; padding:14px;
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px;
+  align-content:start;
+}
+.product-tile {
+  background:white; border-radius:14px; padding:14px;
+  cursor:pointer; transition:all 0.15s; border:2px solid transparent;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05); text-align:center;
+}
+.product-tile:hover { border-color:var(--gold); transform:scale(1.02); }
+.product-tile:active { transform:scale(0.98); }
+.product-tile .emoji { font-size:34px; margin-bottom:8px; }
+.product-tile .name { font-size:13px; font-weight:700; color:var(--brown); margin-bottom:4px; line-height:1.3; }
+.product-tile .price { font-size:15px; font-weight:900; color:var(--gold); }
+.product-tile .unit { font-size:11px; color:#8B6A40; }
+.product-tile.out { opacity:0.4; cursor:not-allowed; }
+
+/* RIGHT - CART */
+.cart-panel {
+  background:white; display:flex; flex-direction:column;
+  border-right:2px solid #f0e8da; /* RTL */
+  box-shadow:-4px 0 20px rgba(0,0,0,0.05);
+}
+.cart-header {
+  padding:16px 20px; background:var(--brown);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.cart-header h2 { color:var(--gold); font-size:16px; font-weight:800; }
+.cart-header .count { color:rgba(255,255,255,0.6); font-size:13px; }
+.cart-items { flex:1; overflow-y:auto; padding:12px; }
+.cart-item {
+  display:flex; align-items:center; gap:8px;
+  padding:10px; border-radius:10px; background:#faf5ef; margin-bottom:8px;
+}
+.cart-item-info { flex:1; min-width:0; }
+.cart-item-name { font-size:13px; font-weight:700; color:var(--brown); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cart-item-price { font-size:12px; color:#8B6A40; }
+.qty-box { display:flex; align-items:center; gap:6px; }
+.qty-btn {
+  background:var(--brown); color:white; border:none;
+  border-radius:6px; width:24px; height:24px;
+  cursor:pointer; font-size:14px; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  transition:background 0.2s; flex-shrink:0;
+}
+.qty-btn:hover { background:var(--gold); }
+.qty-num { font-size:14px; font-weight:800; min-width:18px; text-align:center; }
+.item-total { font-size:13px; font-weight:800; color:var(--gold); white-space:nowrap; }
+.empty-cart { text-align:center; padding:60px 20px; color:#c4a882; }
+.empty-cart .icon { font-size:50px; margin-bottom:12px; }
+.cart-summary { padding:14px 16px; border-top:2px solid #f0e8da; }
+.summary-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:13px; }
+.summary-row span { color:#8B6A40; }
+.summary-row strong { font-weight:700; }
+.total-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:12px 0; margin-top:4px;
+  border-top:2px dashed #e8d5b7;
+}
+.total-row span { font-size:16px; font-weight:700; color:var(--brown); }
+.total-row strong { font-size:24px; font-weight:900; color:var(--gold); }
+
+/* PAYMENT SECTION */
+.payment-section { padding:12px 16px 16px; border-top:2px solid #f0e8da; }
+.payment-label { font-size:13px; color:#8B6A40; font-weight:600; margin-bottom:8px; }
+.payment-btns { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+.pay-method {
+  background:#f5f0ea; border:2px solid transparent; border-radius:10px;
+  padding:10px; text-align:center; cursor:pointer; transition:all 0.2s;
+  font-family:'Tajawal',sans-serif; font-size:13px; font-weight:600; color:#8B6A40;
+}
+.pay-method.selected { background:rgba(62,31,0,0.08); border-color:var(--brown); color:var(--brown); }
+.cash-input-row { display:flex; gap:8px; margin-bottom:10px; align-items:center; }
+.cash-input {
+  flex:1; border:2px solid #e8d5b7; border-radius:10px;
+  padding:10px 14px; font-family:'Tajawal',sans-serif;
+  font-size:15px; font-weight:700; outline:none;
+}
+.cash-input:focus { border-color:var(--gold); }
+.change-display {
+  background:#dcfce7; border-radius:10px; padding:10px;
+  text-align:center; margin-bottom:10px; display:none;
+}
+.change-display .change-val { font-size:20px; font-weight:900; color:#15803d; }
+.complete-btn {
+  width:100%; background:linear-gradient(135deg,#22c55e,#16a34a);
+  border:none; border-radius:14px; padding:16px;
+  color:white; font-family:'Tajawal',sans-serif;
+  font-size:16px; font-weight:800; cursor:pointer;
+  transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:8px;
+}
+.complete-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(34,197,94,0.4); }
+.complete-btn:disabled { background:#ccc; transform:none; box-shadow:none; cursor:not-allowed; }
+.clear-btn {
+  width:100%; background:transparent; border:2px solid #e8d5b7;
+  border-radius:10px; padding:10px; color:#8B6A40;
+  font-family:'Tajawal',sans-serif; font-size:13px; font-weight:600;
+  cursor:pointer; margin-top:8px; transition:all 0.2s;
+}
+.clear-btn:hover { border-color:#ef4444; color:#ef4444; }
+
+/* SUCCESS TOAST */
+.toast {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:#22c55e; color:white; border-radius:50px;
+  padding:12px 28px; font-size:15px; font-weight:700;
+  box-shadow:0 4px 20px rgba(0,0,0,0.2);
+  animation:toastIn 0.3s ease; z-index:999;
+}
+@keyframes toastIn { from{opacity:0;transform:translate(-50%,20px)} to{opacity:1;transform:translate(-50%,0)} }
+
+/* PRINT RECEIPT - 80mm thermal */
+@media print {
+  body * { visibility: hidden; }
+  #receipt, #receipt * { visibility: visible; }
+  #receipt {
+    position: fixed; top: 0; left: 0; right: 0;
+    width: 76mm; margin: 0 auto;
+    font-family: 'Courier New', monospace;
+    font-size: 12px; color: black;
+  }
+}
+#receipt { display: none; }
+
+@media(max-width:768px){
+  .pos-layout { grid-template-columns:1fr; grid-template-rows:60vh 40vh; overflow:hidden; }
+  .cart-panel { border-right:none; border-top:2px solid #f0e8da; }
+}
+</style>
+</head>
+<body>
+
+<div class="pos-layout">
+
+  <!-- PRODUCTS PANEL -->
+  <div class="products-panel">
+    <div class="pos-header">
+      <h1>☕ بن الكويبي — الكاشير</h1>
+      <div class="user">
+        <span id="cashierName">-</span>
+        &nbsp;|&nbsp;
+        <a href="admin.html" style="color:rgba(255,255,255,0.5);text-decoration:none">الإدارة</a>
+        &nbsp;|&nbsp;
+        <span style="cursor:pointer;color:rgba(255,255,255,0.4)" onclick="logout()">خروج</span>
+      </div>
+    </div>
+    <div class="pos-toolbar">
+      <input class="search-input" id="searchInput" placeholder="🔍 بحث عن منتج..." oninput="filterProducts()">
+      <span id="dateDisplay" style="color:#8B6A40;font-size:13px;white-space:nowrap"></span>
+    </div>
+    <div class="cat-pills" id="catPills">
+      <button class="cat-pill active" onclick="filterCat('all',this)">الكل</button>
+    </div>
+    <div class="products-grid" id="productsGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:40px;color:#8B6A40">جاري التحميل...</div>
+    </div>
+  </div>
+
+  <!-- CART PANEL -->
+  <div class="cart-panel">
+    <div class="cart-header">
+      <h2>🧾 الفاتورة</h2>
+      <span class="count" id="itemCount">0 عنصر</span>
+    </div>
+
+    <div class="cart-items" id="cartItems">
+      <div class="empty-cart">
+        <div class="icon">🫘</div>
+        <p>ابدأ بإضافة منتجات</p>
+      </div>
+    </div>
+
+    <div class="cart-summary">
+      <div class="summary-row"><span>المجموع الفرعي</span><strong id="subtotal">0.00 جنيه</strong></div>
+      <div class="summary-row"><span>الضريبة (0%)</span><strong>0.00 جنيه</strong></div>
+      <div class="total-row">
+        <span>الإجمالي</span>
+        <strong id="grandTotal">0.00 جنيه</strong>
+      </div>
+    </div>
+
+    <div class="payment-section">
+      <div class="payment-label">طريقة الدفع</div>
+      <div class="payment-btns">
+        <button class="pay-method selected" onclick="selectPayment('نقدي',this)">💵 نقدي</button>
+        <button class="pay-method" onclick="selectPayment('بطاقة',this)">💳 بطاقة</button>
+      </div>
+      <div class="cash-input-row" id="cashRow">
+        <input class="cash-input" id="cashGiven" type="number" placeholder="المبلغ المستلم" oninput="calcChange()" min="0" step="0.5">
+        <button style="background:var(--brown);border:none;border-radius:10px;padding:10px 12px;color:white;cursor:pointer;font-size:13px" onclick="exactAmount()">المبلغ بالضبط</button>
+      </div>
+      <div class="change-display" id="changeDisplay">
+        <div style="font-size:12px;color:#166534;margin-bottom:2px">الباقي للعميل</div>
+        <div class="change-val" id="changeVal">0.00 جنيه</div>
+      </div>
+      <button class="complete-btn" id="completeBtn" onclick="completeSale()" disabled>
+        ✅ إتمام البيع وطباعة الفاتورة
+      </button>
+      <button class="clear-btn" onclick="clearCart()">🗑️ مسح الفاتورة</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECEIPT (للطباعة) -->
+<div id="receipt"></div>
+
+<script>
+const API_URL = localStorage.getItem('bk_api') || 'YOUR_GOOGLE_APPS_SCRIPT_URL';
+let currentUser = null;
+let allProducts = [];
+let cart = [];
+let paymentMethod = 'نقدي';
+let invoiceCounter = parseInt(localStorage.getItem('bk_inv_counter') || '1');
+let settings = { اسم_المحل: 'بن الكويبي', عنوان_المحل: 'القاهرة', واتساب: '' };
+
+const EMOJIS = { 'بن سايب': '🫘', 'مشروبات': '☕', 'إضافات': '🧂', 'default': '🥤' };
+
+// ===== AUTH =====
+function checkAuth() {
+  currentUser = JSON.parse(localStorage.getItem('bk_user') || 'null');
+  if (!currentUser) { window.location.href = 'login.html'; return; }
+  if (currentUser.role === 'موظف') { window.location.href = 'admin.html'; return; }
+  document.getElementById('cashierName').textContent = currentUser.name;
+}
+
+function logout() {
+  localStorage.removeItem('bk_user');
+  window.location.href = 'login.html';
+}
+
+// ===== DATE =====
+function updateDate() {
+  const now = new Date();
+  document.getElementById('dateDisplay').textContent = now.toLocaleDateString('ar-EG', {
+    weekday:'short', year:'numeric', month:'short', day:'numeric',
+    hour:'2-digit', minute:'2-digit'
+  });
+}
+setInterval(updateDate, 1000);
+updateDate();
+
+// ===== LOAD DATA =====
+async function loadData() {
+  try {
+    const [prodRes, setRes] = await Promise.all([
+      fetch(`${API_URL}?action=getProducts`).then(r=>r.json()),
+      fetch(`${API_URL}?action=getSettings`).then(r=>r.json())
+    ]);
+    if (prodRes.success) allProducts = prodRes.data.filter(p => p['متاح']==='TRUE'||p['متاح']===true);
+    if (setRes.success) settings = { ...settings, ...setRes.data };
+  } catch(e) {
+    allProducts = [
+      { id:'1', 'الاسم':'بن عربي فاخر', 'السعر':85, 'التصنيف':'بن سايب', 'المخزون':50, 'الوحدة':'كيلو', 'متاح':true },
+      { id:'2', 'الاسم':'بن تركي', 'السعر':70, 'التصنيف':'بن سايب', 'المخزون':30, 'الوحدة':'كيلو', 'متاح':true },
+      { id:'3', 'الاسم':'كابتشينو', 'السعر':45, 'التصنيف':'مشروبات', 'المخزون':999, 'الوحدة':'كوب', 'متاح':true },
+      { id:'4', 'الاسم':'كوفي ميكس', 'السعر':35, 'التصنيف':'مشروبات', 'المخزون':999, 'الوحدة':'كوب', 'متاح':true },
+      { id:'5', 'الاسم':'إسبريسو', 'السعر':30, 'التصنيف':'مشروبات', 'المخزون':999, 'الوحدة':'كوب', 'متاح':true },
+      { id:'6', 'الاسم':'لاتيه', 'السعر':50, 'التصنيف':'مشروبات', 'المخزون':999, 'الوحدة':'كوب', 'متاح':true },
+      { id:'7', 'الاسم':'بن إثيوبي', 'السعر':95, 'التصنيف':'بن سايب', 'المخزون':20, 'الوحدة':'كيلو', 'متاح':true },
+    ];
+  }
+  buildCategories();
+  renderProducts(allProducts);
+}
+
+function buildCategories() {
+  const cats = [...new Set(allProducts.map(p => p['التصنيف']))];
+  const pills = document.getElementById('catPills');
+  cats.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-pill';
+    btn.textContent = (EMOJIS[cat]||'') + ' ' + cat;
+    btn.onclick = () => filterCat(cat, btn);
+    pills.appendChild(btn);
+  });
+}
+
+let activeFilter = 'all';
+function filterCat(cat, btn) {
+  activeFilter = cat;
+  document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterProducts();
+}
+
+function filterProducts() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let filtered = allProducts;
+  if (activeFilter !== 'all') filtered = filtered.filter(p => p['التصنيف'] === activeFilter);
+  if (q) filtered = filtered.filter(p => (p['الاسم']||'').toLowerCase().includes(q));
+  renderProducts(filtered);
+}
+
+function renderProducts(products) {
+  const grid = document.getElementById('productsGrid');
+  if (!products.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#8B6A40">لا توجد منتجات</div>';
+    return;
+  }
+  grid.innerHTML = products.map(p => {
+    const stock = parseInt(p['المخزون']||0);
+    const outOfStock = stock !== 999 && stock <= 0;
+    return `<div class="product-tile ${outOfStock?'out':''}" onclick="${outOfStock ? '' : `addToCart('${p['id']}')`}">
+      <div class="emoji">${EMOJIS[p['التصنيف']]||EMOJIS.default}</div>
+      <div class="name">${p['الاسم']}</div>
+      <div class="price">${parseFloat(p['السعر']||0).toFixed(2)} جنيه</div>
+      <div class="unit">${outOfStock ? '⚠️ نفد' : ('/ ' + (p['الوحدة']||''))}</div>
+    </div>`;
+  }).join('');
+}
+
+// ===== CART =====
+function addToCart(id) {
+  const product = allProducts.find(p => p['id'] == id);
+  if (!product) return;
+  const existing = cart.find(i => i.id == id);
+  if (existing) { existing.quantity++; }
+  else cart.push({ id: product['id'], name: product['الاسم'], price: parseFloat(product['السعر']||0), unit: product['الوحدة']||'', quantity: 1 });
+  renderCart();
+  // أنيمشن بسيطة
+  const tile = event.target.closest('.product-tile');
+  if (tile) { tile.style.transform = 'scale(0.95)'; setTimeout(() => tile.style.transform = '', 150); }
+}
+
+function updateQty(id, delta) {
+  const idx = cart.findIndex(i => i.id == id);
+  if (idx === -1) return;
+  cart[idx].quantity += delta;
+  if (cart[idx].quantity <= 0) cart.splice(idx, 1);
+  renderCart();
+}
+
+function renderCart() {
+  const container = document.getElementById('cartItems');
+  const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+  document.getElementById('subtotal').textContent = total.toFixed(2) + ' جنيه';
+  document.getElementById('grandTotal').textContent = total.toFixed(2) + ' جنيه';
+  document.getElementById('itemCount').textContent = cart.reduce((s,i) => s+i.quantity, 0) + ' عنصر';
+  document.getElementById('completeBtn').disabled = !cart.length;
+  calcChange();
+
+  if (!cart.length) {
+    container.innerHTML = '<div class="empty-cart"><div class="icon">🫘</div><p>ابدأ بإضافة منتجات</p></div>';
+    return;
+  }
+  container.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-price">${item.price.toFixed(2)} جنيه / ${item.unit}</div>
+      </div>
+      <div class="qty-box">
+        <button class="qty-btn" onclick="updateQty('${item.id}',-1)">−</button>
+        <span class="qty-num">${item.quantity}</span>
+        <button class="qty-btn" onclick="updateQty('${item.id}',1)">+</button>
+      </div>
+      <div class="item-total">${(item.price*item.quantity).toFixed(2)}<br><span style="font-size:10px;color:#8B6A40">جنيه</span></div>
+    </div>`).join('');
+}
+
+function clearCart() {
+  if (cart.length && !confirm('هل تريد مسح الفاتورة؟')) return;
+  cart = [];
+  renderCart();
+  document.getElementById('cashGiven').value = '';
+  document.getElementById('changeDisplay').style.display = 'none';
+}
+
+// ===== PAYMENT =====
+function selectPayment(method, btn) {
+  paymentMethod = method;
+  document.querySelectorAll('.pay-method').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('cashRow').style.display = method === 'نقدي' ? 'flex' : 'none';
+  document.getElementById('changeDisplay').style.display = 'none';
+}
+
+function exactAmount() {
+  const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+  document.getElementById('cashGiven').value = total.toFixed(2);
+  calcChange();
+}
+
+function calcChange() {
+  if (paymentMethod !== 'نقدي') return;
+  const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+  const given = parseFloat(document.getElementById('cashGiven').value || 0);
+  const changeDisplay = document.getElementById('changeDisplay');
+  if (given >= total && total > 0) {
+    const change = given - total;
+    document.getElementById('changeVal').textContent = change.toFixed(2) + ' جنيه';
+    changeDisplay.style.display = 'block';
+  } else {
+    changeDisplay.style.display = 'none';
+  }
+}
+
+// ===== COMPLETE SALE =====
+async function completeSale() {
+  if (!cart.length) return;
+  const total = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+  const given = parseFloat(document.getElementById('cashGiven').value || 0);
+  if (paymentMethod === 'نقدي' && given < total) {
+    alert('المبلغ المستلم أقل من الإجمالي!'); return;
+  }
+
+  const btn = document.getElementById('completeBtn');
+  btn.disabled = true;
+  btn.textContent = 'جاري الحفظ...';
+
+  // حفظ في السيرفر
+  try {
+    await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'addSale', type: 'كاشير',
+        items: cart, total,
+        cashier: currentUser?.name || 'كاشير'
+      })
+    });
+  } catch(e) { /* تجاهل خطأ الاتصال */ }
+
+  // توليد رقم الفاتورة
+  const invNo = 'INV-' + String(invoiceCounter).padStart(5, '0');
+  invoiceCounter++;
+  localStorage.setItem('bk_inv_counter', invoiceCounter);
+
+  // طباعة الفاتورة
+  printReceipt(invNo, total, given);
+
+  // نجاح
+  showToast('✅ تم البيع بنجاح — ' + invNo);
+  cart = [];
+  renderCart();
+  document.getElementById('cashGiven').value = '';
+  document.getElementById('changeDisplay').style.display = 'none';
+
+  btn.disabled = false;
+  btn.textContent = '✅ إتمام البيع وطباعة الفاتورة';
+}
+
+// ===== THERMAL RECEIPT =====
+function printReceipt(invNo, total, given) {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG', {hour:'2-digit',minute:'2-digit'});
+  const change = paymentMethod === 'نقدي' ? (given - total).toFixed(2) : '0.00';
+  const shopName = settings['اسم_المحل'] || 'بن الكويبي';
+  const shopAddr = settings['عنوان_المحل'] || '';
+
+  const itemsHTML = cart.map(i =>
+    `<tr><td style="text-align:right;max-width:100px;word-break:break-word">${i.name}</td><td style="text-align:center">${i.quantity}</td><td style="text-align:left">${(i.price*i.quantity).toFixed(2)}</td></tr>`
+  ).join('');
+
+  const receiptHTML = `
+    <!DOCTYPE html><html dir="rtl"><head>
+    <meta charset="UTF-8">
+    <title>فاتورة - ${invNo}</title>
+    <style>
+      * { margin:0; padding:0; box-sizing:border-box; }
+      body {
+        width: 76mm;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 11px;
+        color: #000;
+        padding: 4mm 3mm;
+        direction: rtl;
+      }
+      .center { text-align: center; }
+      .bold { font-weight: bold; }
+      .large { font-size: 14px; }
+      .xl { font-size: 18px; font-weight: bold; }
+      .divider { border-top: 1px dashed #000; margin: 4px 0; }
+      table { width: 100%; border-collapse: collapse; }
+      td { padding: 2px 0; vertical-align: top; }
+      .right { text-align: right; }
+      .left { text-align: left; }
+      .total-row td { font-size: 13px; font-weight: bold; padding-top: 4px; }
+      @media print {
+        body { width: 76mm; }
+        button { display: none !important; }
+        @page { margin: 0; size: 80mm auto; }
+      }
+    </style>
+    </head><body>
+      <div class="center bold large">${shopName}</div>
+      ${shopAddr ? `<div class="center" style="font-size:10px">${shopAddr}</div>` : ''}
+      <div class="divider"></div>
+      <div>رقم الفاتورة: <span class="bold">${invNo}</span></div>
+      <div>التاريخ: ${dateStr}</div>
+      <div>الكاشير: ${currentUser?.name || '-'}</div>
+      <div class="divider"></div>
+      <table>
+        <thead><tr><td class="bold right">الصنف</td><td class="bold center">ك</td><td class="bold left">الإجمالي</td></tr></thead>
+        <tbody>
+          <tr><td colspan="3"><div class="divider"></div></td></tr>
+          ${itemsHTML}
+          <tr><td colspan="3"><div class="divider"></div></td></tr>
+          <tr class="total-row">
+            <td colspan="2" class="right">الإجمالي</td>
+            <td class="left">${total.toFixed(2)} جنيه</td>
+          </tr>
+          ${paymentMethod === 'نقدي' ? `
+          <tr>
+            <td colspan="2" class="right">المستلم</td>
+            <td class="left">${parseFloat(given||0).toFixed(2)} جنيه</td>
+          </tr>
+          <tr>
+            <td colspan="2" class="right bold">الباقي</td>
+            <td class="left bold">${change} جنيه</td>
+          </tr>` : `<tr><td colspan="3" class="center">الدفع: بطاقة</td></tr>`}
+        </tbody>
+      </table>
+      <div class="divider"></div>
+      <div class="center">طريقة الدفع: ${paymentMethod}</div>
+      <div class="divider"></div>
+      <div class="center bold" style="font-size:13px">شكراً لزيارتكم ☕</div>
+      <div class="center" style="font-size:10px;margin-top:2px">كل رشفة حكاية</div>
+      <div style="height:10mm"></div>
+      <button onclick="window.print()" style="display:block;width:100%;padding:8px;background:#3E1F00;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px;margin-top:8px">🖨️ طباعة</button>
+    </body></html>`;
+
+  const win = window.open('', '_blank', 'width=350,height=600');
+  win.document.write(receiptHTML);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ===== INIT =====
+checkAuth();
+loadData();
+</script>
+</body>
+</html>
